@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vokabeln">
+<meta name="theme-color" content="#1F3A93">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<title>Vokabeltrainer Englisch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#E6ECF3; --card:#FFFFFF; --ink:#1F3A93; --text:#1C2330; --muted:#5B6472;
+  --rule:#C9D6EE; --redline:#E0525A; --ok:#2E8B57; --bad:#C8434B; --mark:#FFD84D;
+  --line:#CBD3DE; --box:#D5DDE8; --boxEdge:#AEB9C8; --flame:#E8730C; --gold:#E3A600;
+  --okSoft:rgba(46,139,87,.12); --badSoft:rgba(200,67,75,.12);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --desk:#131922; --card:#1E2633; --ink:#A9BDFF; --text:#E6EAF2; --muted:#9AA4B5;
+  --rule:#2C3A52; --redline:#E0666D; --ok:#5CC98C; --bad:#F0747B; --mark:#E8C43A;
+  --line:#2E3746; --box:#252F3F; --boxEdge:#3A4659; --flame:#FF9A3D; --gold:#F2C230;
+  --okSoft:rgba(92,201,140,.15); --badSoft:rgba(240,116,123,.15);
+}}
+:root[data-theme="dark"]{
+  --desk:#131922; --card:#1E2633; --ink:#A9BDFF; --text:#E6EAF2; --muted:#9AA4B5;
+  --rule:#2C3A52; --redline:#E0666D; --ok:#5CC98C; --bad:#F0747B; --mark:#E8C43A;
+  --line:#2E3746; --box:#252F3F; --boxEdge:#3A4659; --flame:#FF9A3D; --gold:#F2C230;
+  --okSoft:rgba(92,201,140,.15); --badSoft:rgba(240,116,123,.15);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--desk);color:var(--text);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+main{max-width:760px;margin:0 auto;padding:20px 18px 48px}
+h1{font-size:1.9rem;line-height:1.15;margin:.2em 0 .1em;color:var(--ink)}
+h2{font-size:1.15rem;margin:1.6em 0 .6em}
+p.sub{margin:0 0 1em;color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;touch-action:manipulation}
+button:disabled{cursor:default}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+
+/* Spielstand */
+.stats{display:grid;grid-template-columns:auto 1fr auto;gap:10px 16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:8px 0 12px}
+.flamme{display:flex;flex-direction:column;align-items:center;min-width:70px;text-align:center}
+.flamme .fl{font-size:1.6rem;line-height:1}
+.flamme .n{font-size:1.9rem;font-weight:700;line-height:1.05;color:var(--flame)}
+.flamme .l{font-size:.75rem;color:var(--muted);line-height:1.1}
+.flamme.aus .fl{filter:grayscale(1);opacity:.5}
+.flamme.aus .n{color:var(--muted)}
+.level .name{font-weight:700;font-size:1.05rem}
+.level .xp,.woche-wrap .xp{font-size:.85rem;color:var(--muted)}
+.bar{height:12px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar div{height:100%;background:var(--gold);border-radius:6px;transition:width .6s ease}
+.extra{font-size:.85rem;margin-top:4px;color:var(--ink)}
+.ring{width:68px;height:68px;position:relative}
+.ring svg{transform:rotate(-90deg);display:block}
+.ring circle{transition:stroke-dashoffset .6s ease}
+.ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;text-align:center;line-height:1.05}
+.ring span.fertig{font-size:1.5rem;color:var(--ok)}
+.woche-wrap{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.woche{display:flex;gap:8px;align-items:flex-end}
+.tag{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;color:var(--muted)}
+.saeule{width:16px;background:var(--gold);border-radius:3px 3px 1px 1px;opacity:.85}
+.tag.heute span{color:var(--text);font-weight:700}
+.banner{background:var(--card);border-left:5px solid var(--flame);padding:10px 14px;border-radius:8px;margin-bottom:10px;font-size:.98rem}
+.banner.gut{border-left-color:var(--ok)}
+
+/* Karteikasten */
+.kasten{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;background:var(--box);border:2px solid var(--boxEdge);border-radius:6px 6px 14px 14px;padding:14px 8px 10px;margin-top:6px}
+.fach{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:128px;border-radius:4px;padding:6px 2px;position:relative}
+.fach:hover{background:rgba(127,127,127,.08)}
+.tab{font-family:Caveat,cursive;font-size:1.25rem;line-height:1;color:var(--ink);background:var(--card);border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;padding:4px 8px 2px;margin-bottom:-1px;white-space:nowrap}
+.fach[data-box="5"] .tab::after{content:" 👑"}
+.stapel{width:100%;background:var(--card);border:1px solid var(--line);border-top:3px solid var(--redline);border-radius:2px;display:flex;align-items:flex-end;justify-content:center;transition:height .35s ease}
+.zahl{font-weight:700;font-size:1.05rem;margin-top:6px}
+.faellig{font-size:.78rem;color:var(--muted);min-height:1.1em}
+.hint{font-size:.9rem;color:var(--muted);margin:.5em 0 0}
+
+/* Auswahl */
+.thema{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.thema-kopf{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.thema-kopf strong{font-size:1rem}
+.klein{font-size:.85rem;color:var(--ink);padding:6px 4px;text-decoration:underline;text-underline-offset:3px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-size:.95rem;background:transparent}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin:4px 8px 4px 0;background:var(--card)}
+.seg button{padding:10px 14px;font-size:.95rem}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.optionen{display:flex;flex-wrap:wrap;align-items:center}
+.einst{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-bottom:6px}
+.einst > span{min-width:96px;font-size:.95rem}
+
+.start{display:block;width:100%;margin-top:16px;padding:18px;border-radius:12px;background:var(--ink);color:var(--card);font-size:1.2rem;font-weight:700}
+.start:disabled{opacity:.45}
+.zweit{display:block;width:100%;margin-top:10px;padding:15px;border-radius:12px;border:2px solid var(--flame);color:var(--flame);font-size:1.1rem;font-weight:700;background:var(--card)}
+.zweit:disabled{opacity:.45}
+.leise{display:inline-block;margin-top:12px;color:var(--muted);font-size:.9rem;text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+.leiste{display:flex;gap:18px;flex-wrap:wrap}
+
+/* Abzeichen */
+.abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+.badge .i{font-size:1.9rem;line-height:1.1}
+.badge .t{font-weight:700;font-size:.9rem;margin-top:4px}
+.badge .d{font-size:.75rem;color:var(--muted);line-height:1.25;margin-top:2px}
+.badge.zu .i{filter:grayscale(1);opacity:.35}
+.badge.zu .t{color:var(--muted)}
+.badge.neu{border:2px solid var(--gold)}
+
+/* Erinnerung */
+.zeitwahl{font:inherit;font-size:1.1rem;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--ink);padding:4px 0}
+details ol{margin:.5em 0 0;padding-left:1.3em}
+details li{margin-bottom:.3em}
+
+/* Lernkarte */
+.oben{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mitte{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 0;min-height:1.6em}
+.kombo{font-weight:700;color:var(--flame)}
+.punkte{font-weight:700;color:var(--gold);position:relative}
+.pop{position:absolute;right:0;top:-4px;font-weight:700;color:var(--ok);animation:pop 1s ease-out forwards;pointer-events:none;white-space:nowrap}
+@keyframes pop{0%{opacity:0;transform:translateY(6px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.15)}100%{opacity:0;transform:translateY(-22px) scale(1)}}
+.fortschritt{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 16px}
+.fortschritt div{height:100%;background:var(--ok);transition:width .3s}
+.szene{perspective:1400px}
+.karte{position:relative;min-height:300px;transform-style:preserve-3d;transition:transform .5s ease}
+.karte.umgedreht{transform:rotateY(180deg)}
+.seite{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:6px;box-shadow:0 2px 0 var(--line),0 10px 24px rgba(20,30,60,.12);
+  background:var(--card) repeating-linear-gradient(to bottom,transparent 0,transparent 43px,var(--rule) 43px,var(--rule) 44px);background-position:0 70px;
+  border-top:4px solid var(--redline);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 22px;text-align:center}
+.rueck{transform:rotateY(180deg)}
+.sprache{position:absolute;top:12px;left:16px;font-size:.85rem;color:var(--muted)}
+.fachinfo{position:absolute;top:12px;right:16px;font-family:Caveat,cursive;font-size:1.2rem;color:var(--ink)}
+.wort{font-size:clamp(1.6rem,5.5vw,2.6rem);font-weight:700;line-height:1.2;color:var(--text);word-break:break-word}
+.wort.lang{font-size:clamp(1.3rem,4vw,1.8rem)}
+.klein-wort{font-size:1rem;color:var(--muted);margin-top:12px}
+.ton{margin-top:16px;border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:.95rem;background:var(--card)}
+.aktionen{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.aktionen.eins{grid-template-columns:1fr}
+.btn{padding:18px 10px;border-radius:12px;font-size:1.15rem;font-weight:700;border:2px solid var(--line);background:var(--card)}
+.btn.haupt{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.btn.ja{border-color:var(--ok);color:var(--ok)}
+.btn.nein{border-color:var(--bad);color:var(--bad)}
+.eingabe{width:100%;margin-top:20px;font:inherit;font-size:1.3rem;padding:16px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--text)}
+.urteil{margin-top:14px;font-weight:700;font-size:1.1rem;min-height:1.5em;text-align:center}
+.urteil.ok{color:var(--ok)} .urteil.bad{color:var(--bad)}
+
+/* Blitzrunde */
+.zeit{height:12px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0 16px}
+.zeit div{height:100%;background:var(--flame);transition:width .25s linear}
+.zeit.knapp div{background:var(--bad)}
+.blitzkarte{background:var(--card);border-top:4px solid var(--flame);border-radius:6px;box-shadow:0 2px 0 var(--line),0 10px 24px rgba(20,30,60,.12);padding:34px 20px;text-align:center;min-height:150px;display:flex;flex-direction:column;justify-content:center;position:relative}
+.mc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.mc button{padding:14px 10px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-size:1.05rem;font-weight:700;min-height:72px;line-height:1.25;word-break:break-word}
+.mc button.richtig{border-color:var(--ok);background:var(--okSoft);color:var(--ok)}
+.mc button.falsch{border-color:var(--bad);background:var(--badSoft);color:var(--bad)}
+
+/* Ergebnis & Liste */
+.ergebnis{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 20px}
+.gross{font-size:2.6rem;font-weight:700;color:var(--ink);line-height:1}
+.xpgross{font-size:1.5rem;font-weight:700;color:var(--gold);margin-top:6px}
+.meldung{margin:12px 0 0;padding:10px 14px;border-radius:8px;background:var(--desk);font-weight:700}
+.tabelle-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+td,th{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--card)}
+td.f{font-family:Caveat,cursive;font-size:1.15rem;color:var(--ink);white-space:nowrap}
+.bankkopf td{background:var(--desk);font-weight:700}
+.konfetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion: reduce){.karte,.stapel,.fortschritt div,.bar div,.ring circle{transition:none}.pop{animation:none;opacity:0}}
+@media (max-width:480px){
+  .kasten{grid-template-columns:repeat(3,1fr)} .fach{min-height:110px}
+  .stats{grid-template-columns:auto 1fr} .ring{grid-column:2;justify-self:end;grid-row:1}
+  .level{grid-column:1/-1}
+  .woche-wrap{flex-direction:column;align-items:flex-start}
+  .mc{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const DATA = [
+{t:"M1-1 Me, my friends and family", b:[
+["Wordbank 1",`welcome (to)|willkommen (in)
+my|mein(e)
+name|Name
+be|sein
+I|ich
+from|von, aus
+year|Jahr
+old|alt
+have got|haben
+a/an|ein(e)
+like|mögen
+favourite|Lieblings-
+what|was
+your|dein(e); euer/eure; Ihr(e)
+where|wo(hin)
+you|du, dich, dir, Sie, Ihnen; ihr, euch
+how|wie
+no|nein
+have|haben
+the|der/die/das
+live|leben, wohnen
+in|in
+big|groß
+house|Haus
+black|schwarz
+with|mit
+friend|Freund/in
+a lot (of)|viel(e)
+see|sehen
+say|sagen
+listen (to)|(zu)hören
+hear|hören
+point (at/to)|deuten/zeigen (auf)
+who|wer; der/die/das
+six|sechs
+new|neu
+look|sehen, schauen
+Look!|Schau mal!, Sieh mal!`],
+["Wordbank 2",`cousin|Cousin/e
+and|und
+his|sein(e,r)
+these|diese
+Hello.|Hallo.
+this|diese(r,s); das (nah)
+that|das; der/die/das (fern)
+Sorry.|Entschuldigung., Verzeihung.
+our|unser(e)
+or|oder
+boy|Junge
+let's (= let us) ...|lass(t) uns ...
+go|gehen
+there|dort(hin)
+but|aber
+mum|Mama, Mutti
+dad|Papa, Vati
+they|sie
+we|wir
+all (the)|alle(s); der/die/das ganze
+teacher|Lehrer/in
+twelve|zwölf
+parents|Eltern
+come|kommen
+very|sehr
+play|spielen
+no|kein(e)
+girl|Mädchen
+red|rot
+child|Kind
+children|Kinder
+picture|Bild
+often|oft, häufig
+check|überprüfen, kontrollieren
+clothes (only plural)|Kleider, Kleidung
+mouth|Mund
+leg|Bein
+head|Kopf
+elbow|Ellenbogen
+knee|Knie`],
+["Wordbank 3 – Me and my body",`hair|Haare
+short|kurz
+long|lang
+blond|blond
+dark|dunkel
+straight|glatt
+curly|lockig
+ear(s)|Ohr(en)
+head|Kopf
+eye(s)|Auge(n)
+nose|Nase
+tooth (teeth)|Zahn (Zähne)
+mouth|Mund
+neck|Hals
+arm(s)|Arm(e)
+thumb(s)|Daumen
+finger(s)|Finger
+tummy|Bauch
+elbow(s)|Ellenbogen/Ellenbögen
+hand(s)|Hand/Hände
+leg(s)|Bein(e)
+foot (feet)|Fuß/Füße
+toe(s)|Zehe(n)`],
+["Wordbank 4",`colour|Farbe
+she|sie
+great|groß, riesig; großartig
+idea|Idee
+too|(all)zu; auch
+about|über
+Hello, everybody!|Hallo zusammen!; Hallo miteinander!
+sister|Schwester
+five|fünf
+can|können
+love|lieben; sehr gern mögen
+animal|Tier
+not|nicht
+pet|Haustier
+me|mir, mich
+for|für
+eat|essen
+think|denken, glauben, meinen
+it|es
+the best|der, die, das beste
+Bye.|Tschüss.
+find|finden
+word|Wort
+her|sie; ihr(e,n)
+food|Essen
+write|schreiben
+two|zwei
+much|viel; sehr
+better|besser
+hate|hassen, nicht ausstehen können
+there is|es gibt
+sentence|Satz
+their|ihr(e)
+know|wissen; kennen
+make|machen
+cat|Katze`]]},
+{t:"M1-1 My favourite things", b:[
+["Part 1",`favourite|Lieblings-
+club|AG
+activity|(Freizeit-)Aktivität
+look at|ansehen
+talk about|sprechen über
+who|wer
+what|was
+when|wann
+where|wo
+whose|wessen
+how|wie
+how much|wie viel
+free time|Freizeit
+What's on?|Was gibt's?; Was ist los?
+gym|Turnhalle
+young|jung
+European|Europäer/in; europäisch
+country|Land
+Join our project.|Mach(t) bei unserem Projekt mit.
+information|Information
+trip|Ausflug
+for sale|zu verkaufen
+size|Größe
+year|Jahr
+visit|besuchen
+show|zeigen
+us|uns
+collect|sammeln
+together|zusammen, gemeinsam
+brilliant|toll, klasse
+which|welche(r,s)
+final|Endspiel, Finale
+against|gegen
+watch|beobachten; zusehen, zuschauen
+match|Spiel
+well|nun (ja), tja
+problem|Problem
+cold|Kälte; Erkältung
+run|laufen, rennen
+hope|hoffen
+I can't wait (till ...).|Ich kann es (bis ...) kaum erwarten.
+See you soon!|Bis bald!`],
+["Part 2",`lots of|viel, jede Menge
+sport|Sport(art)
+swim|schwimmen
+ride|fahren (mit); reiten
+horse|Pferd
+be good at something (sth)|gut in etwas (etw) sein
+many|viele
+mouse (pl mice)|Maus (Plural: Mäuse)
+at all|überhaupt
+at night|nachts
+should|sollte/müsste
+touch|berühren
+seem|scheinen
+hedgehog|Igel
+watch out|aufpassen (auf)
+snail|Schnecke
+wild|wild
+some|einige; etwas
+its|sein(e); ihr(e)
+match (with/to)|zuordnen
+happy|glücklich, zufrieden; fröhlich
+stay|bleiben
+clean|sauber
+stay with somebody (sb)|bei jemandem bleiben
+find out about|sich informieren über
+elephant|Elefant
+hamster|Hamster
+budgie|Wellensittich
+guinea pig|Meerschweinchen
+dos and don'ts|was man tun und was man lassen sollte
+sleep|schlafen
+interesting|interessant
+farm|Bauernhof
+look|aussehen (hier)
+rainbow|Regenbogen
+feed|füttern, zu essen geben
+like|mögen
+hate|hassen
+love|lieben`],
+["Part 3",`match|Spiel
+well|nun (ja), tja
+problem|Problem
+run|rennen, laufen
+goal|Ziel, Tor
+change|(ver)ändern, austauschen
+toy|Spielzeug
+hide|(sich) verstecken
+earring|Ohrring
+seashell|Muschel
+button|Knopf
+kind|Art, Sorte
+another|noch eine(r,s)
+Thanks a lot!|Vielen Dank!
+letter|Brief, Buchstabe
+lesson|(Schul-)Stunde
+body|Körper
+climb (up)|hinaufsteigen, klettern (auf)
+tree|Baum
+wrong|falsch
+ugly|hässlich
+true|wahr
+beetle|Käfer
+speak|sprechen
+board|Brett, Tafel
+till|bis
+stamp|Briefmarke`],
+["Basis Wordbank 4",`a / an|ein/e
+true|wahr
+false|falsch
+song|Lied
+cat|Katze
+house|Haus
+and|und
+in|in
+is|ist
+red|rot
+milk|Milch
+her|ihr/e
+his|sein/e
+boy|Junge
+girl|Mädchen
+poster|Plakat, Poster
+dream|Traum
+look at|anschauen
+colour|Farbe
+read|lesen
+guinea pig|Meerschweinchen
+dog|Hund`]]},
+{t:"M1-1 My Day", b:[
+["Wordbank 1",`half|halb
+(ten) o'clock|(zehn) Uhr
+quarter (to/past)|Viertel (vor/nach)
+tooth (pl teeth)|Zahn
+behind|hinter
+face|Gesicht
+bathroom|Badezimmer
+wash|(sich) waschen
+towel|Handtuch
+morning|der Morgen
+evening|Abend
+brush|putzen
+don't (do not)|mache nicht
+there is/are|es gibt
+toothpaste|Zahnpasta
+water|Wasser
+wet|nass
+just|nur
+dirty|dreckig
+still|(immer) noch
+eight|acht
+comb|kämmen
+right|rechts
+left|links
+toilet bag|Kulturbeutel
+toothbrush|Zahnbürste`],
+["Wordbank 2",`copy|kopieren, abschreiben
+only|nur
+funny|lustig
+stand|stehen
+why|warum
+poor|arm
+small|klein
+slim|schlank
+short|kurz
+kitchen|Küche
+cook|kochen
+breakfast|Frühstück
+help|helfen
+spoon|Löffel
+knife|Messer
+fork|Gabel
+tablespoon|kleiner Löffel (eigentlich: Esslöffel)
+glass|Glas
+bread|Brot
+milk|Milch
+table|Tisch
+hungry|hungrig
+with|mit
+ready|fertig
+forget|vergessen
+butter|Butter
+call|rufen, anrufen
+Hurry up!|Beeilung!
+missing|fehlend, verschwunden
+talk|reden, sprechen`],
+["Wordbank 3",`coffee|Kaffee
+eggs|Eier
+cornflakes|Cornflakes
+tea|Tee
+bacon|Speck
+sugar|Zucker
+orange juice|Orangensaft
+honey|Honig
+toast|Toast
+fruit salad|Obstsalat
+when|wann
+where|wo
+how|wie
+can|können
+have|haben
+on|auf
+in front of|vor
+over|über
+next to|neben
+in|in
+under|unter
+cheese|Käse
+picture|Bild
+true|wahr
+false|falsch
+jar|Glas(gefäß)
+between|zwischen`],
+["Wordbank 4",`(to) have a shower|duschen
+(to) brush your teeth|Zähne putzen
+(to) get up|aufstehen
+(to) take the bus|den Bus nehmen
+(to) eat breakfast|frühstücken
+(to) brush your hair|Haare kämmen
+(to) eat a snack|einen Snack essen
+(to) pack your school bag|die Schultasche packen
+(to) play games|Spiele spielen
+(to) do sports|Sport machen
+(to) feed your pet|dein Haustier füttern
+(to) do your homework|deine Hausaufgaben machen
+(to) go to the toilet|zur Toilette gehen
+(to) clean up your room|dein Zimmer aufräumen
+(to) go outside|nach draußen gehen
+(to) meet your friends|deine Freunde treffen
+(to) play on your phone|auf deinem Handy spielen
+(to) take off your clothes|deine Kleidung ausziehen
+(to) eat lunch|Mittagessen essen
+(to) watch TV|fernsehen; Fernsehen schauen
+(to) eat dinner|Abendessen essen
+(to) go to sleep|schlafen gehen
+(to) read a book|ein Buch lesen
+(to) wash your hands|deine Hände waschen
+(to) take a bath|ein Bad nehmen
+(to) go to school|zur Schule gehen
+(to) put on your clothes|deine Kleidung anziehen
+(to) make your bed|dein Bett machen
+(to) go home|nach Hause gehen`]]},
+{t:"M1-1 At school", b:[
+["Wordbank 1",`at|auf, an, in, bei
+when|wann; wenn
+open|aufmachen, öffnen
+please|bitte
+cold|kalt
+by|von
+late|(zu) spät
+always|immer
+in German/English|auf Deutsch/Englisch
+spell (out)|buchstabieren
+Oh dear!|Du meine Güte!
+Here you are!|Hier, bitte!; Bitteschön!
+homework|Hausaufgaben
+funny|lustig, witzig, komisch
+apple|Apfel
+look at|betrachten, sehen
+thing|Ding, Gegenstand
+them|sie, ihnen
+blackboard|Tafel
+calendar|Kalender
+corner|Ecke
+pinboard|Pinnwand
+desk|Schreibtisch
+bin|Mülleimer, Mülltonne
+duster|Staubtuch
+cupboard|Schrank
+sponge|Schwamm
+wall|Wand
+chalk|Kreide
+classroom|Klassenzimmer
+dialogue|Gespräch, Dialog
+pupil|Schüler/in
+again|wieder; noch (ein)mal
+then|damals; dann
+repeat|wiederholen`],
+["Wordbank 2",`noise|Lärm; Geräusch
+three|drei
+list|Liste
+uniform|Uniform
+pencil case|Federmäppchen, Etui
+English|Englisch
+cartridge|Patrone
+card|Pappe, Karton; Karte
+more|mehr
+write down|aufschreiben
+plural|Plural
+alphabet|Alphabet
+song|Lied
+clap|klatschen
+to|in, nach, zu
+Come on!|Komm(t) jetzt!; Mach(t) schon!
+sing out|laut singen
+loud|laut
+so far|so weit; bisher
+once more|noch einmal
+Hey!|He!; Hallo!
+as|als; wie; da
+before|zuvor, vorher
+forget|vergessen
+learn|lernen
+take turns|sich abwechseln
+spelling|Rechtschreibung
+Practice matters.|Übung macht den Meister.
+match (with/to)|zuordnen
+German|deutsch; Deutsche/r
+rhyme|(sich) reimen
+pair|Paar
+theme|Thema; Lektion, Kapitel
+town|Stadt
+verb|Verb
+adjective|Adjektiv
+than|als`],
+["Wordbank 3",`history|Geschichte
+subject|Thema; (Schul)fach
+last|letzte(r,s)
+maths|Mathe
+terrible|schrecklich, furchtbar
+double (maths)|Doppelstunde (Mathe)
+lunch|Mittagessen
+science|Naturwissenschaft
+break|Pause
+art|(bildende) Kunst
+You can say that again.|Das kannst du laut sagen.
+be lucky|Glück haben
+stupid (informal)|Blödmann, Dummkopf
+(long) ago|vor (langer Zeit)
+wear|tragen
+local fashion designer|ortsansässige/r Modedesigner/in
+work|Arbeit
+murder|ermorden, umbringen
+canteen|Kantine; Mensa
+the best thing about ...|das Beste an ...
+timetable|Stundenplan
+fill in|eintragen
+also|auch, außerdem
+registration|Überprüfung der Anwesenheit
+assembly|Versammlung
+technology|Technologie, Technik
+information technology|Informationstechnologie; Informatik
+geography|Erdkunde, Geografie
+French|Französisch; französisch; Franzose/Französin
+religious education|Religionslehre
+PE (= physical education)|Sport(unterricht)
+drama|Theaterkurs; Schauspielerei
+food technology|Ernährungslehre
+start|anfangen (mit)
+... a week|... pro/in der Woche
+How long is ...?|Wie lange dauert ...?
+difficult|schwierig, schwer
+schoolday|Schultag
+if|wenn, falls; ob`]]},
+{t:"M1-2 London", b:[
+["Part 1",`palace|Palast
+queen|Königin
+have tea|Tee trinken
+Changing of the Guard|Wachwechsel
+stall|(Verkaufs)stand
+toy|Spielzeug
+perfect|perfekt, vollkommen
+relax|sich entspannen
+deckchair|Liegestuhl
+go for a boat ride|eine Bootsfahrt machen
+lake|See
+(on) Sundays|sonntags
+royal|königlich
+prison|Gefängnis
+past|Vergangenheit
+tower|Turm
+cannon|Kanone
+the Beefeaters|Tower-Wächter
+have a look at|sich ansehen
+Crown Jewels|Kronjuwelen
+bridge|Brücke
+open|sich öffnen, aufgehen
+up|nach oben, hinauf
+large|groß
+ship|Schiff
+pass|vorbeikommen
+climb (up)|(hinauf)steigen, klettern (auf)
+spectacular|atemberaubend, fantastisch
+view|Sicht, Aussicht, (Aus)blick`],
+["Part 2",`the (River) Thames|die Themse
+across|über
+walkway|(Fuß)weg
+than|als (nur bei Vergleichen)
+mile|Meile
+(railway) station|Bahnhof
+platform|Bahnsteig
+must-see|etwas, das man gesehen haben muss
+catch the train|den Zug nehmen
+leave for|fahren nach
+real|wirklich, echt
+boat trip|Bootsfahrt
+along|entlang
+stairs|Treppe
+statue|Statue, Standbild
+the same|gleich
+spend|verbringen (Zeit), ausgeben (Geld)
+sightseeing|Besichtigungen, Sightseeing
+afterwards|später, danach, anschließend
+museum|Museum
+river|Fluss
+go for a ride|herumfahren
+beautiful|schön
+sight(s)|Sehenswürdigkeit(en)
+(turn) right|rechts (abbiegen)
+(turn) left|links (abbiegen)
+straight (on)|gerade(aus)
+(at the) corner|(an der) Ecke
+on your left/right|auf deiner linken/rechten Seite`],
+["Part 3",`the tube|die (Londoner) U-Bahn
+get on|einsteigen
+change|umsteigen
+get off|aussteigen
+double-decker bus|Doppeldeckerbus
+Mind the gap!|Achte auf die Lücke (zwischen Zug und Bahnsteig)!
+No worries.|Kein Problem.; Keine Bange.
+Excuse me.|Entschuldigen Sie bitte.
+map|Karte; Fahrplan
+signs|Schilder
+line|Linie; Route
+Oyster card|Zugticket für die Tube
+How can I get to ...?|Wie komme ich zu/nach ...?
+Take the District Line to ...|Nimm die District Line nach ...
+northbound|Richtung Norden
+southbound|Richtung Süden
+westbound|Richtung Westen
+eastbound|Richtung Osten
+What's the best way to get there?|Was ist der beste Weg, um dort hinzukommen?
+by foot|zu Fuß
+Drive down this street.|Fahr diese Straße lang.
+Can you tell me the way to ..., please?|Können Sie mir bitte den Weg nach ... sagen?
+Which way is the Thames, please?|In welche Richtung ist die Themse, bitte?`]]},
+{t:"Dreams", b:[
+["Word bank 1",`dream|Traum
+to think about something|über etwas nachdenken; denken über etw.
+to describe (something)|(etwas) beschreiben
+floor|Stockwerk
+room|Zimmer; Raum
+object|Objekt; Ding; Gegenstand
+to live with|leben mit
+cellar|Keller
+staircase|Treppe; Treppenhaus
+roof|Dach
+chimney|Kamin; Schornstein
+creative|kreativ
+about|über
+size|Größe
+to look like|aussehen`],
+["Word bank 2",`furniture|Möbel
+location|Ort
+to like best|am liebsten mögen
+useful|sinnvoll
+sentence starter|Satzanfang; Satzbeginn
+expression|Ausdruck
+ideal|ideal; optimal
+moreover / in addition / besides / furthermore|außerdem
+on the wall|an der Wand
+What I like best about my ideal room is ... because ...|Was ich an meinem idealen Zimmer am liebsten mag, ist ...
+comfortable|angenehm
+cosy|gemütlich
+bunk bed|Etagenbett
+curtain|Vorhang`],
+["Word bank 3 – Jobs",`actor/actress|Schauspieler:in
+firefighter|Feuerwehrmann/-frau
+medical assistant|Medizinische/r Angestellte/r
+baker|Bäcker:in
+detective|Detektiv:in
+barber/hairdresser|Friseur:in
+dentist|Zahnarzt/Zahnärztin
+professor|Professor:in
+gardener|Gärtner:in
+priest|Priester:in
+police officer|Polizist:in
+butcher|Metzger:in
+veterinarian|Tierarzt/Tierärztin
+photographer|Fotograf:in
+cook|Koch/Köchin
+mechanic|Mechaniker:in
+soldier|Soldat:in
+singer|Sänger:in
+astronaut|Astronaut:in
+waiter/waitress|Kellner/Kellnerin
+construction worker|Bauarbeiter:in
+director|Regisseur:in
+receptionist|Rezeptionist:in
+tailor|Schneider:in
+doctor|Arzt/Ärztin
+farmer|Landwirt:in`]]},
+{t:"M1.2 Celebrations", b:[
+["Wordbank 1",`celebration|Feier; Fest
+to celebrate|feiern
+Easter|Ostern
+New Year's Eve|Silvester
+Diwali|hinduistisches Lichterfest
+light|Licht; Lichtquelle
+(to) light a candle|eine Kerze anzünden
+also|auch
+each other|einander; gegenseitig
+present|Geschenk
+sweets|Süßigkeiten
+fireworks (pl)|Feuerwerk
+Hanukkah|Chanukka (jüdisches Fest)
+than|als
+(to) thank|danken
+(to) burn (burnt, burnt)|(ab)brennen, verbrennen
+bonfire|Freudenfeuer, Lagerfeuer
+(to) remember|sich erinnern; daran denken
+(to) blow up|aufblasen; in die Luft sprengen
+Houses of Parliament|das Parlament
+tradition|Tradition; Brauch
+every|jede/r/s
+(to) note down|(sich) notieren
+(to) get ready for something|sich (für etwas) fertig machen
+(to) prepare|vorbereiten; erstellen
+anyone|(irgend)jemand
+decoration|Dekoration, Verzierung`],
+["Wordbank 2",`costume|Kostüm
+at the same time|gleichzeitig; zur selben Zeit
+bowling alley|Bowlingbahn
+(to) give somebody the bumps|jemanden hochleben lassen
+birthday|Geburtstag
+ice rink|Eisbahn; Schlittschuhbahn
+(to) blow out|ausblasen; auspusten
+(to) make a wish|sich etwas wünschen
+wish|Wunsch
+way|Art und Weise
+Happy Birthday!|Alles Gute zum Geburtstag!; Herzlichen Glückwunsch zum Geburtstag!
+kind (of)|Art; Sorte
+(to) plan|planen
+sleepover|Übernachtung; Pyjama-Party
+mustn't|nicht dürfen
+can't|nicht können
+needn't|nicht brauchen
+(to) invite|einladen
+what else|was sonst; was noch
+all night|die ganze Nacht
+(to) want (to)|wollen; mögen
+(to) do our hair|uns frisieren; unsere Haare machen
+(to) choose|auswählen; wählen
+fresh|frisch
+(to) whip|schlagen
+(to) slice|in Scheiben schneiden
+cream|Sahne`],
+["Wordbank 3",`search|Suche; Such-
+pirate|Pirat/-in; Seeräuber/-in
+famous|berühmt
+ghost|Geist; Gespenst
+witch|Hexe
+scary|unheimlich; gruselig; beängstigend
+karaoke|Karaoke
+the worst|der/die/das schlimmste; der/die/das schlechteste
+bad (worse, worst)|schlecht
+good (better, best)|gut
+challenge|Herausforderung
+(to) enjoy|genießen
+confident|selbstbewusst; selbstsicher
+web page|Internetseite; Website
+adventure|Abenteuer
+nervous|nervös; aufgeregt
+clean|sauber
+dirty|dreckig`],
+["Wordbank 5",`(to) have a party|eine Party machen
+language|Sprache
+New Year|Neujahr
+special|besondere/-r/-s; spezielle/-r/-s
+good luck|viel Glück
+(to) sound|klingen; sich anhören
+early|früh
+(to) go with|passen zu
+(to) like best|am liebsten mögen
+Thanksgiving|amerikanisches Erntedankfest
+traditional|traditionell
+turkey|Truthahn
+USA (= United States of America)|USA; Vereinigte Staaten von Amerika
+important|wichtig
+harvest|Ernte
+peasant|Bauer
+(to) dress up as|sich verkleiden als
+temple|Tempel
+church|Kirche
+calendar|Kalender
+invitation|Einladung
+All the best!|Alles Gute!
+fifth|fünfte/r/s`],
+["Wordbank 6",`Bonfire Night|britischer Gedenktag am 5. November
+(to) look forward to something|sich auf etwas freuen
+(to) kill|töten
+king|König
+Catholic|Katholik/-in; katholisch
+Protestant|Protestant/-in; protestantisch
+gunpowder|Schießpulver
+cellar|Keller
+they were captured|sie wurden gefangen genommen
+to survive|überleben
+the Gunpowder Plot|die Pulververschwörung
+rhyme|Reim
+aloud|laut
+by heart|auswendig
+treason|(Landes)verrat
+plot|Verschwörung
+reason|Grund
+anonymous|anonym
+without|ohne
+age|Alter`]]},
+{t:"M1-2 Typically English?", b:[
+["Part 1",`typical|typisch, charakteristisch
+polite|höflich
+have a cup of tea|eine Tasse Tee trinken
+fish and chips|Backfisch und Pommes
+pound sterling (£)|Pfund; Währungseinheit im Vereinigten Königreich
+currency|Währung
+note|Schein
+coin|Münze
+sunburn|Sonnenbrand
+capital|Hauptstadt
+royal|königlich
+rollercoaster|Achterbahn
+popular|beliebt
+impression|Eindruck
+foreign|fremd
+foreigner|Fremde/r
+abroad|im Ausland
+amongst|unter, zwischen
+prepare|bereiten
+path|Weg, Pfad
+excuse|entschuldigen
+fault|Fehler, Mangel, Schuld
+calm nerves|die Nerven beruhigen
+wipe the slate clean|die Dinge ungeschehen machen
+stereotype|Stereotyp, Klischee
+to be on time|pünktlich sein
+although|obwohl
+a common thing|etwas ganz Gewöhnliches
+humour|Humor
+it's safe to say|man kann mit Sicherheit sagen
+recently|kürzlich
+recognise|wiedererkennen`],
+["Part 2",`nationality|Nationalität
+food|Essen
+drink|Getränk
+crisps|(Kartoffel-)Chips
+chips|Pommes (britisches Englisch)
+sausages|Würstchen
+fried egg|Spiegelei
+scrambled eggs|Rührei
+boiled eggs|gekochte Eier
+tea|Tee
+coffee|Kaffee
+idiom|Redewendung
+peas|Erbsen
+cook|kochen
+meat|Fleisch
+vegetarian|vegetarisch
+spinach|Spinat
+hash browns|Rösti
+fruit|Obst
+vegetables|Gemüse
+orange juice|Orangensaft
+bagel|Bagel
+pancakes|Pfannkuchen
+biscuits|Plätzchen
+honey|Honig
+lunch|Mittagessen
+dinner|Abendessen`],
+["Part 3",`museum|Museum
+for free|umsonst
+Natural History Museum|Naturkundemuseum
+dinosaur|Dinosaurier
+fossil|Fossil
+toy|Spielzeug
+skeleton|Skelett
+diplodocus|Dinosaurierart
+huge|riesig, gewaltig
+gift|Geschenk
+gift shop|Geschenkartikelladen
+sit down|sich (hin)setzen
+bench|Bank
+be alive|leben, am Leben sein
+stroke|streicheln
+fall asleep|einschlafen
+little|leise (hier)
+crack|(zer)brechen, knacken
+nothing|nichts
+toward(s)|in Richtung
+look around|sich umsehen
+become|werden
+palaeontologist|Paläontologe/Paläontologin
+by the way|übrigens
+make up|erfinden, (sich) ausdenken
+expert|Experte/Expertin`]]},
+{t:"M1-3 At the restaurant", b:[
+["Wordbank 1",`eat out|essen gehen
+restaurant|Restaurant, Gaststätte
+order|bestellen
+practise|üben
+eating habits|Essgewohnheiten
+menu|Speisekarte
+dish|Gericht, Schale
+try|ausprobieren
+sb would like|jd würde gerne (etw tun)
+special|Tagesgericht
+waiter/waitress|Kellner/in
+Good evening|Guten Abend
+Are you ready to order?|Möchten Sie schon bestellen?
+What are you having?|Was nimmst du?; Was nehmen Sie?
+Could we have the bill, please?|Wir möchten bitte zahlen.; Die Rechnung, bitte.
+starter|Vorspeise
+served (with)|serviert (mit)
+main course|Hauptgericht, Hauptgang
+chips|Pommes frites
+onion|Zwiebel
+doughnut|Donut
+soft drink|alkoholfreies Getränk
+soup|Suppe
+fresh|frisch
+lettuce|Kopfsalat
+bacon|Speck
+crispy|knusprig
+cucumber|Gurke
+garlic|Knoblauch
+hot|scharf
+sauce|Soße
+vegetarian|vegetarisch
+dessert|Nachtisch
+crumble|mit Streuseln überbackenes Kompott
+scoop of ice cream|Eiskugel
+topped with|überzogen (mit)
+chopped|gehackt
+nut|Nuss
+beverage|Getränk
+ham|Schinken`],
+["Wordbank 2",`guest|Gast
+waiter/waitress|Kellner/Kellnerin
+Are you ready to order?|Möchten Sie jetzt bestellen?
+I'll have the chicken curry, please.|Ich nehme das Chicken Curry, bitte.
+Anything else for you, sir?|Sonst noch etwas für Sie, Sir?
+I'm not very hungry.|Ich bin nicht sehr hungrig.
+And what would you like to drink?|Und was möchten Sie trinken?
+I'm sorry, we don't have any tomato juice.|Tut mir leid, wir haben keinen Tomatensaft.
+What's the soup of the day?|Was gibt es für eine Tagessuppe?
+How is your meal?|Wie ist Ihr Essen?
+The food is delicious.|Das Essen ist köstlich.
+Could I have potatoes instead of chips, please?|Könnte ich bitte Kartoffeln statt Pommes haben?
+Of course, so that was ...|Natürlich, also das war ...
+I would like a tomato juice, please.|Ich hätte gerne einen Tomatensaft, bitte.
+Excuse me, could I have the bill, please?|Verzeihung, könnte ich bitte die Rechnung haben?
+(to) read the menu|die Speisekarte lesen
+(to) choose a meal|ein Gericht auswählen
+(to) have a starter|eine Vorspeise nehmen
+(to) order a main course|ein Hauptgericht bestellen
+(to) have ice cream for dessert|ein Eis zum Nachtisch bestellen
+(to) call the waiter|den Kellner rufen
+(to) ask for the bill|nach der Rechnung fragen`],
+["Wordbank 3",`(to) cut onions|Zwiebeln schneiden
+(to) put cheese on pizza|Käse auf eine Pizza legen
+(to) make a curry|ein Curry machen
+(to) use spices|Gewürze verwenden
+(to) help with the cooking|beim Kochen helfen
+(to) mash the potatoes|die Kartoffeln zerdrücken
+(to) add the salt|das Salz hinzufügen
+(to) mix with the yoghurt|mit dem Joghurt mischen
+spicy|würzig
+hot|heiß
+cold|kalt
+mild|mild
+delicious|lecker
+sweet|süß
+healthy|gesund
+fresh|frisch
+old|alt
+wonderful|wunderbar
+terrible|schrecklich
+awful|furchtbar
+enjoyable|erfreulich
+vegetarian|vegetarisch`]]},
+{t:"M1-3 Travelling", b:[
+["Wordbank 1",`cash|Bargeld
+cash in hand|Guthaben; Bargeld auf die Hand
+phrase|Satz; Ausdruck; Redewendung
+charity|Wohltätigkeitsorganisation
+marathon|Marathonlauf
+mark|Note, Zensur
+extra|zusätzlich
+earn|verdienen
+survey|Umfrage
+to be short of cash/money|knapp bei Kasse sein
+deliver|liefern, austragen (Zeitungen)
+do a paper round|Zeitungen austragen
+from rags to riches|vom Tellerwäscher zum Millionär
+especially|besonders
+America|Amerika
+anyone|jeder, jedes
+smart|schlau, clever
+hard-working|fleißig
+even|sogar
+dishwasher|Tellerwäscher/in (hier)
+millionaire|Millionär
+to set up|eröffnen (hier)
+You've made it.|Du hast es geschafft.
+currency|Währung`],
+["Wordbank 2",`go places|Ausflüge machen, herumreisen
+travelling|Reisen
+prepare|vorbereiten
+look through|durchsehen
+flight|Flug, Fliegen
+the Niagara Falls|die Niagarafälle
+anywhere|überall; irgendwo(hin)
+foreign|ausländisch, fremd`]]},
+{t:"M1-3 Make up your mind", b:[
+["Vocabulary List 1 – Opinions",`Make up your mind!|Entscheide dich!
+stating your opinion|die eigene Meinung äußern
+In my opinion|Meiner Meinung nach
+From my point of view|Aus meiner Sicht
+As far as I'm concerned|Was mich betrifft
+Personally|Persönlich
+If you ask me|Wenn du mich fragst
+The way I see it|So wie ich es sehe
+I feel like|Ich habe das Gefühl, dass ...
+agreeing and disagreeing with someone else's opinion|der Meinung eines anderen zustimmen und nicht zustimmen
+Exactly! / Totally! / Definitely!|Genau! / Völlig! / Auf jeden Fall!
+Of course.|Natürlich.
+That's a good point.|Das ist ein guter Punkt.
+You're absolutely right.|Du hast völlig recht.
+That's so true.|Das ist so wahr.`],
+["Wordbank 2 – Clothes",`shirt|Hemd
+tie|Krawatte
+polo shirt|Poloshirt
+sweatshirt|Sweatshirt
+pullover|Pullover
+blazer|Blazer
+trousers|Hose
+skirt|Rock
+socks|Socken
+shoes|Schuhe
+kilt|Kilt
+waistcoat|Weste
+hat|Hut
+dress|Kleid
+blue|blau
+black|schwarz
+dark green|dunkelgrün
+light grey|hellgrau
+patterned dress|gemustertes Kleid
+brown|braun`],
+["Wordbank 3 – Agreeing",`That's for sure.|Das ist ganz sicher.
+strong agreement|starke Zustimmung
+I'm with you one-hundred percent.|Ich stimme dir hundertprozentig zu.
+I couldn't agree with you more.|Ich könnte nicht mehr mit dir übereinstimmen.
+weak agreement|schwache Zustimmung
+I guess so.|Ich denke, ja.
+I suppose.|Ich nehme es an.
+disagreements|Meinungsverschiedenheiten
+I don't think I completely agree.|Ich glaube, ich bin nicht ganz einverstanden.
+I'm not so sure about that.|Ich bin mir da nicht so sicher.
+I don't think that's the case.|Ich glaube nicht, dass das der Fall ist.
+That's not necessarily true.|Das ist nicht unbedingt wahr.
+No way!|Unmöglich!
+Absolutely not!|Auf gar keinen Fall!
+Are you kidding me?|Willst du mich auf den Arm nehmen?
+Let's just drop it.|Lassen wir es einfach sein.
+I think we need to move on.|Ich denke, wir müssen weitermachen.
+We'll have to agree to disagree.|Wir müssen uns darauf einigen, dass wir uns nicht einig sind.`]]},
+{t:"Irregular verbs (unregelmäßige Verben)", v:1, b:[
+["be – eat",`be – was/were – been|sein
+become – became – become|werden
+begin – began – begun|beginnen, anfangen
+bite – bit – bitten|beißen
+blow – blew – blown|blasen, wehen
+break – broke – broken|(zer)brechen, kaputt machen
+bring – brought – brought|(mit)bringen
+build – built – built|bauen
+buy – bought – bought|kaufen
+catch – caught – caught|fangen
+choose – chose – chosen|(aus)wählen
+come – came – come|kommen
+cost – cost – cost|kosten
+cut – cut – cut|schneiden
+do – did – done|tun, machen
+draw – drew – drawn|zeichnen
+dream – dreamt/dreamed – dreamt/dreamed|träumen
+drink – drank – drunk|trinken
+drive – drove – driven|fahren (Auto)
+eat – ate – eaten|essen`],
+["fall – know",`fall – fell – fallen|fallen
+feed – fed – fed|füttern
+feel – felt – felt|(sich) fühlen
+fight – fought – fought|kämpfen
+find – found – found|finden
+fly – flew – flown|fliegen
+forget – forgot – forgotten|vergessen
+get – got – got|bekommen; werden
+give – gave – given|geben
+go – went – gone|gehen
+grow – grew – grown|wachsen
+hang – hung – hung|hängen
+have – had – had|haben
+hear – heard – heard|hören
+hide – hid – hidden|(sich) verstecken
+hit – hit – hit|schlagen, treffen
+hold – held – held|halten
+hurt – hurt – hurt|verletzen, wehtun
+keep – kept – kept|(be)halten
+know – knew – known|wissen, kennen`],
+["learn – send",`learn – learnt/learned – learnt/learned|lernen
+leave – left – left|verlassen, abfahren
+lend – lent – lent|(ver)leihen
+let – let – let|lassen
+lie – lay – lain|liegen
+lose – lost – lost|verlieren
+make – made – made|machen
+mean – meant – meant|bedeuten, meinen
+meet – met – met|treffen
+pay – paid – paid|bezahlen
+put – put – put|setzen, stellen, legen
+read – read – read|lesen
+ride – rode – ridden|reiten, (Rad) fahren
+ring – rang – rung|klingeln, anrufen
+run – ran – run|rennen, laufen
+say – said – said|sagen
+see – saw – seen|sehen
+sell – sold – sold|verkaufen
+send – sent – sent|schicken, senden`],
+["shine – write",`shine – shone – shone|scheinen (Sonne)
+show – showed – shown|zeigen
+shut – shut – shut|schließen
+sing – sang – sung|singen
+sit – sat – sat|sitzen
+sleep – slept – slept|schlafen
+speak – spoke – spoken|sprechen
+spend – spent – spent|ausgeben (Geld); verbringen (Zeit)
+stand – stood – stood|stehen
+steal – stole – stolen|stehlen
+swim – swam – swum|schwimmen
+take – took – taken|nehmen
+teach – taught – taught|lehren, unterrichten
+tell – told – told|erzählen, sagen
+think – thought – thought|denken, glauben
+throw – threw – thrown|werfen
+understand – understood – understood|verstehen
+wake up – woke up – woken up|aufwachen
+wear – wore – worn|tragen (Kleidung)
+win – won – won|gewinnen
+write – wrote – written|schreiben`]]}
+
+];
+
+/* ---------- Daten aufbereiten ---------- */
+const BANKS = []; const CARDS = [];
+DATA.forEach((topic, ti) => topic.b.forEach(([name, txt], bi) => {
+  const id = "t" + ti + "b" + bi;
+  const bank = {id, topic: topic.t, ti, name, cards: [], v: !!topic.v};
+  txt.split("\n").forEach(line => {
+    const i = line.indexOf("|"); if (i < 0) return;
+    const en = line.slice(0, i).trim(), de = line.slice(i + 1).trim();
+    const c = {id: id + ":" + en + ":" + de, en, de, bank: id, v: !!topic.v};
+    bank.cards.push(c); CARDS.push(c);
+  });
+  BANKS.push(bank);
+}));
+
+const APP_URL = "https://elduendedelaloco.github.io/vokabeltrainer/";
+
+/* ---------- Lernstand (unverändert aus Version 1) ---------- */
+const KEY = "vokabeltrainer-m1-v1";
+const DAY = 86400000;
+const INTERVAL = [0, 0, 1, 2, 4, 7]; // Tage bis zur nächsten Abfrage je Fach
+let S = load();
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.p) return Object.assign({sel: [], dir: "en-de", mode: "flip"}, s); } catch(e){}
+  return {p: {}, sel: [], dir: "en-de", mode: "flip"};
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+
+const boxOf = c => (S.p[c.id] ? S.p[c.id].b : 0);
+const isDue = c => !S.p[c.id] || S.p[c.id].d <= Date.now();
+const selectedCards = () => CARDS.filter(c => S.sel.includes(c.bank));
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const countBox = n => CARDS.filter(c => boxOf(c) === n).length;
+
+/* ---------- Spielstand (neu in Version 2, eigener Speicher) ---------- */
+const GKEY = "vokabeltrainer-m1-game-v1";
+function dstr(d){ return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+const today = () => dstr(new Date());
+function dayDiff(a, b){
+  const [y1, m1, d1] = a.split("-").map(Number), [y2, m2, d2] = b.split("-").map(Number);
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / DAY);
+}
+function freshGame(){
+  return {xp: 0, days: {}, streak: 0, best: 0, lastGoal: null, freezes: 0, goal: 50, badges: {}, sound: true, remind: "17:00", blitzBest: 0, rounds: 0, welcome: 0};
+}
+let G = loadGame();
+function loadGame(){
+  let g = null;
+  try { g = JSON.parse(localStorage.getItem(GKEY)); } catch(e){}
+  if (g && typeof g.xp === "number") return Object.assign(freshGame(), g);
+  g = freshGame();
+  // Startbonus für alles, was in Version 1 schon gelernt wurde
+  const bonus = Object.values(S.p).reduce((s, v) => s + (v.b || 0) * 5, 0);
+  if (bonus > 0){ g.xp = bonus; g.welcome = bonus; }
+  try { localStorage.setItem(GKEY, JSON.stringify(g)); } catch(e){}
+  return g;
+}
+function saveGame(){ try { localStorage.setItem(GKEY, JSON.stringify(G)); } catch(e){} }
+
+let notice = null;
+function checkStreak(){
+  if (!G.lastGoal || G.streak === 0) return;
+  const gap = dayDiff(G.lastGoal, today());
+  if (gap <= 1) return;
+  const missed = gap - 1;
+  if (G.freezes >= missed){
+    G.freezes -= missed;
+    const y = new Date(); y.setDate(y.getDate() - 1); G.lastGoal = dstr(y);
+    notice = {gut: true, text: `❄️ Glück gehabt: ${missed === 1 ? "Ein Serien-Schutz hat" : missed + " Serien-Schutz-Karten haben"} deine ${G.streak}-Tage-Serie gerettet.`};
+  } else {
+    notice = {text: `Deine Serie von ${G.streak} ${G.streak === 1 ? "Tag" : "Tagen"} ist gerissen. Heute startest du eine neue!`};
+    G.streak = 0;
+  }
+  saveGame();
+}
+
+const LEVELS = [[0,"Beginner"],[100,"Explorer"],[250,"Traveller"],[500,"Tube Rider"],[800,"Londoner"],[1200,"Tower Guard"],[1700,"Beefeater"],[2300,"Knight"],[3000,"Captain"],[4000,"Lord"],[5500,"Royal"],[7500,"Legend"],[10000,"Word Wizard"]];
+function levelOf(xp){
+  let i = 0; while (i + 1 < LEVELS.length && xp >= LEVELS[i + 1][0]) i++;
+  const cur = LEVELS[i][0], next = LEVELS[i + 1] ? LEVELS[i + 1][0] : null;
+  return {i, name: LEVELS[i][1], next, pct: next ? (xp - cur) / (next - cur) : 1};
+}
+
+function creditGoal(ev){
+  const t = today();
+  if ((G.days[t] || 0) >= G.goal && G.lastGoal !== t){
+    const gap = G.lastGoal ? dayDiff(G.lastGoal, t) : 99;
+    G.streak = gap === 1 ? G.streak + 1 : 1;
+    G.lastGoal = t; G.best = Math.max(G.best, G.streak);
+    if (G.streak % 7 === 0 && G.freezes < 2){ G.freezes++; if (ev) ev.push("freeze"); }
+    if (ev) ev.push("goal");
+    saveGame();
+  }
+}
+function addXP(n){
+  if (!n) return [];
+  const ev = [], t = today(), before = levelOf(G.xp).i;
+  G.xp += n; G.days[t] = (G.days[t] || 0) + n;
+  creditGoal(ev);
+  if (levelOf(G.xp).i > before) ev.push("level");
+  const keys = Object.keys(G.days).sort(); while (keys.length > 60) delete G.days[keys.shift()];
+  saveGame();
+  return ev;
+}
+
+const BADGES = [
+  {id:"first",  i:"🎒", t:"Los geht's",        d:"Erste Lernrunde beendet",                 ok: () => G.rounds >= 1},
+  {id:"perfect",i:"💯", t:"Fehlerfrei",        d:"Runde mit 10+ Karten ohne Fehler",        ok: c => c && c.perfect && c.total >= 10},
+  {id:"combo10",i:"⚡", t:"Kombo 10",          d:"10 richtige am Stück",                    ok: c => c && c.maxCombo >= 10},
+  {id:"combo25",i:"🌩️", t:"Kombo 25",          d:"25 richtige am Stück",                    ok: c => c && c.maxCombo >= 25},
+  {id:"typer",  i:"⌨️", t:"Tipp-Profi",        d:"15 richtig eingetippt in einer Runde",    ok: c => c && c.mode === "type" && c.right >= 15},
+  {id:"s3",     i:"🔥", t:"3 Tage",            d:"3 Tage in Folge das Tagesziel",           ok: () => G.streak >= 3},
+  {id:"s7",     i:"🔥", t:"1 Woche",           d:"7 Tage in Folge",                         ok: () => G.streak >= 7},
+  {id:"s14",    i:"🚀", t:"2 Wochen",          d:"14 Tage in Folge",                        ok: () => G.streak >= 14},
+  {id:"s30",    i:"🏆", t:"1 Monat",           d:"30 Tage in Folge",                        ok: () => G.streak >= 30},
+  {id:"blitz15",i:"⏱️", t:"Blitzmerker",       d:"15 Treffer in einer Blitzrunde",          ok: c => c && c.blitz >= 15},
+  {id:"blitz30",i:"🌪️", t:"Turbo",             d:"30 Treffer in einer Blitzrunde",          ok: c => c && c.blitz >= 30},
+  {id:"bank",   i:"📦", t:"Wordbank geknackt", d:"Alle Karten einer Wordbank ab Fach 3",    ok: () => BANKS.some(b => b.cards.every(c => boxOf(c) >= 3))},
+  {id:"m25",    i:"🎓", t:"25 Meister",        d:"25 Karten in Fach 5",                     ok: () => countBox(5) >= 25},
+  {id:"m100",   i:"👑", t:"100 Meister",       d:"100 Karten in Fach 5",                    ok: () => countBox(5) >= 100},
+  {id:"xp1000", i:"⭐", t:"1000 XP",           d:"Insgesamt 1000 XP gesammelt",             ok: () => G.xp >= 1000},
+  {id:"xp5000", i:"🌟", t:"5000 XP",           d:"Insgesamt 5000 XP gesammelt",             ok: () => G.xp >= 5000},
+];
+function checkBadges(ctx){
+  const neu = [];
+  BADGES.forEach(b => { if (!G.badges[b.id] && b.ok(ctx)){ G.badges[b.id] = today(); neu.push(b); } });
+  if (neu.length) saveGame();
+  return neu;
+}
+
+/* ---------- Ton & Konfetti ---------- */
+let actx = null;
+function tone(seq){
+  if (!G.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === "suspended") actx.resume();
+    const t0 = actx.currentTime + 0.01;
+    seq.forEach(([f, st, d, type]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + st);
+      g.gain.exponentialRampToValueAtTime(0.2, t0 + st + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + st + d);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0 + st); o.stop(t0 + st + d + 0.03);
+    });
+  } catch(e){}
+}
+const SND = {
+  ok:  () => tone([[660, 0, .12], [990, .08, .2]]),
+  bad: () => tone([[200, 0, .28, "triangle"], [170, .1, .3, "triangle"]]),
+  win: () => tone([[523, 0, .16], [659, .12, .16], [784, .24, .16], [1047, .36, .45]]),
+};
+function confetti(){
+  try { if (matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch(e){}
+  const cv = document.createElement("canvas"); cv.className = "konfetti"; document.body.appendChild(cv);
+  const dpr = window.devicePixelRatio || 1, W = cv.width = innerWidth * dpr, H = cv.height = innerHeight * dpr;
+  const ctx = cv.getContext("2d");
+  const cols = ["#1F3A93", "#E0525A", "#E8730C", "#E3A600", "#2E8B57", "#7FA7FF"];
+  const ps = Array.from({length: 150}, () => ({
+    x: W / 2 + (Math.random() - .5) * W * .2, y: H * .4,
+    vx: (Math.random() - .5) * W * .028, vy: -(Math.random() * H * .022 + H * .006),
+    s: (5 + Math.random() * 7) * dpr, c: cols[Math.floor(Math.random() * cols.length)], r: Math.random() * 6, vr: (Math.random() - .5) * .4
+  }));
+  const t0 = performance.now();
+  (function frame(t){
+    ctx.clearRect(0, 0, W, H);
+    ps.forEach(p => { p.vy += H * .0008; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+    if (t - t0 < 2600) requestAnimationFrame(frame); else cv.remove();
+  })(t0);
+}
+
+/* ---------- Antwortprüfung (großzügig) ---------- */
+function norm(s){
+  return s.toLowerCase().replace(/[’`´]/g, "'").replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/\.\.\.|…/g, " ").replace(/[.!?¿¡"]/g, "").replace(/\s+/g, " ").trim().replace(/^to /, "");
+}
+function variants(s){
+  const out = new Set();
+  const add = x => {
+    [x, x.replace(/\([^()]*\)/g, " "), x.replace(/[()]/g, ""), x.replace(/:in\b/g, ""), x.replace(/\s*\(hier\)/, "")]
+      .forEach(v => { const n = norm(v); if (n) out.add(n); });
+  };
+  add(s);
+  s.split(/[;,]/).forEach(part => { add(part); part.split("/").forEach(add); });
+  return out;
+}
+function verbForms(en){
+  const forms = en.split(/\s+[–-]\s+/).map(f => {
+    const opts = f.split("/").map(x => x.trim());
+    const set = new Set(opts.map(o => norm(o)));
+    set.add(norm(opts.join(" ")));
+    return [...set];
+  });
+  let out = [""];
+  forms.forEach(fs => { const n = []; out.forEach(p => fs.forEach(f => n.push((p ? p + " " : "") + f))); out = n; });
+  return new Set(out);
+}
+const isRight = (input, answer, verb) => {
+  if (verb){ const n = norm(input.replace(/[–—,;\/]|\s-\s|-/g, " ")); return n.length > 0 && verbForms(answer).has(n); }
+  const n = norm(input); return n.length > 0 && variants(answer).has(n);
+};
+
+/* ---------- Aussprache ---------- */
+let enVoice = null;
+function pickVoice(){
+  try {
+    const vs = speechSynthesis.getVoices();
+    enVoice = vs.find(v => v.lang === "en-GB") || vs.find(v => v.lang && v.lang.startsWith("en")) || null;
+  } catch(e){}
+}
+if ("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text){
+  if (!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text.replace(/\((to)\)\s*/g, "").replace(/\.\.\./g, "").replace(/\s+–\s+/g, ", ").replace(/\//g, " or "));
+  u.lang = "en-GB"; if (enVoice) u.voice = enVoice; u.rate = 0.9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ---------- Bausteine ---------- */
+const app = document.getElementById("app");
+let session = null;
+let resetArmed = false;
+let blitzTimer = null;
+
+function ring(p){
+  const r = 27, c = 2 * Math.PI * r, q = Math.max(0, Math.min(1, p));
+  return `<svg width="68" height="68" viewBox="0 0 68 68" aria-hidden="true">
+    <circle cx="34" cy="34" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/>
+    <circle cx="34" cy="34" r="${r}" fill="none" stroke="${q >= 1 ? "var(--ok)" : "var(--flame)"}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - q)).toFixed(1)}"/></svg>`;
+}
+function weekData(){
+  const out = [], d = new Date();
+  for (let i = 6; i >= 0; i--){
+    const x = new Date(d); x.setDate(d.getDate() - i); const k = dstr(x);
+    out.push({xp: G.days[k] || 0, wd: ["So","Mo","Di","Mi","Do","Fr","Sa"][x.getDay()], heute: i === 0});
+  }
+  return out;
+}
+function statsHTML(){
+  const L = levelOf(G.xp), t = G.days[today()] || 0, done = G.lastGoal === today();
+  const w = weekData(), wmax = Math.max(G.goal, ...w.map(x => x.xp)), wsum = w.reduce((s, x) => s + x.xp, 0);
+  return `<section class="stats" aria-label="Spielstand">
+    <div class="flamme ${G.streak ? "" : "aus"}"><span class="fl" aria-hidden="true">🔥</span><span class="n">${G.streak}</span><span class="l">${G.streak === 1 ? "Tag" : "Tage"} in Folge</span></div>
+    <div class="level">
+      <div class="name">Level ${L.i + 1}: ${L.name}</div>
+      <div class="xp">${G.xp} XP${L.next ? `, noch ${L.next - G.xp} bis Level ${L.i + 2}` : ""}</div>
+      <div class="bar"><div style="width:${Math.round(L.pct * 100)}%"></div></div>
+      ${G.freezes ? `<div class="extra">❄️ ${G.freezes}× Serien-Schutz bereit</div>` : ""}
+    </div>
+    <div class="ring" role="img" aria-label="Tagesziel: ${t} von ${G.goal} XP">${ring(t / G.goal)}${done ? `<span class="fertig">✓</span>` : `<span>${t}<br>/${G.goal}</span>`}</div>
+    <div class="woche-wrap">
+      <div class="woche" aria-hidden="true">${w.map(x => `<div class="tag${x.heute ? " heute" : ""}"><div class="saeule" style="height:${Math.max(3, Math.round(36 * x.xp / wmax))}px;${x.xp >= G.goal ? "background:var(--ok)" : ""}"></div><span>${x.wd}</span></div>`).join("")}</div>
+      <div class="xp">Diese Woche <strong>${wsum} XP</strong>, Rekord-Serie ${Math.max(G.best, G.streak)} ${Math.max(G.best, G.streak) === 1 ? "Tag" : "Tage"}<br>👑 ${countBox(5)} Wörter gemeistert</div>
+    </div>
+  </section>`;
+}
+function bannerHTML(){
+  const out = [];
+  if (G.welcome){
+    out.push(`<div class="banner gut">🎁 Neu: Punkte, Serien, Abzeichen und die Blitzrunde! Für deine bisher gelernten Karten gibt es <strong>${G.welcome} XP</strong> Startbonus. Dein Karteikasten ist komplett erhalten.</div>`);
+    G.welcome = 0; saveGame();
+  }
+  if (notice){ out.push(`<div class="banner${notice.gut ? " gut" : ""}">${notice.text}</div>`); notice = null; }
+  const t = G.days[today()] || 0;
+  if (G.lastGoal !== today()){
+    if (G.streak > 0) out.push(`<div class="banner">🔥 Halte deine Serie! Heute fehlen noch <strong>${G.goal - t} XP</strong>, sonst ist deine ${G.streak}-Tage-Serie morgen weg.</div>`);
+    else out.push(`<div class="banner">🎯 Tagesziel ${G.goal} XP: Das sind etwa ${Math.max(1, Math.ceil((G.goal - t) / 10))} richtige Karten.</div>`);
+  }
+  return out.join("");
+}
+
+/* ---------- Startseite ---------- */
+function home(){
+  if (blitzTimer){ clearInterval(blitzTimer); blitzTimer = null; }
+  session = null;
+  checkStreak();
+  creditGoal(null);
+  const cards = selectedCards();
+  const counts = [0,0,0,0,0,0], due = [0,0,0,0,0,0];
+  cards.forEach(c => { const b = boxOf(c); counts[b]++; if (isDue(c)) due[b]++; });
+  const maxC = Math.max(1, ...counts);
+  const dueTotal = due.reduce((a, b) => a + b, 0);
+  const labels = ["Neu", "Fach 1", "Fach 2", "Fach 3", "Fach 4", "Fach 5"];
+
+  let h = `<h1>Vokabeltrainer Englisch</h1>
+  ${statsHTML()}
+  ${bannerHTML()}
+  <div class="kasten" role="group" aria-label="Karteikasten">`;
+  counts.forEach((n, b) => {
+    const hgt = n ? 14 + Math.round(66 * n / maxC) : 4;
+    h += `<button class="fach" data-box="${b}" ${n ? "" : "disabled"} aria-label="${labels[b]}: ${n} Karten, ${due[b]} fällig. Tippen zum Üben.">
+      <span class="tab">${labels[b]}</span>
+      <span class="stapel" style="height:${hgt}px"></span>
+      <span class="zahl">${n}</span>
+      <span class="faellig">${b > 0 && due[b] ? due[b] + " fällig" : ""}</span>
+    </button>`;
+  });
+  h += `</div><p class="hint">${cards.length ? "Richtige Karten wandern ein Fach weiter, falsche zurück in Fach 1. Fach 5 heißt: gemeistert." : "Wähle unten mindestens eine Wordbank aus."}</p>
+
+  <button class="start" id="go" ${dueTotal ? "" : "disabled"}>${dueTotal ? `Fällige Karten lernen (${Math.min(dueTotal, 20)}${dueTotal > 20 ? " von " + dueTotal : ""})` : (cards.length ? "Alle fälligen Karten gelernt" : "Wordbank auswählen")}</button>
+  <button class="zweit" id="blitz" ${cards.length >= 4 ? "" : "disabled"}>⏱️ Blitzrunde: 60 Sekunden${G.blitzBest ? ` (Rekord ${G.blitzBest})` : ""}</button>
+
+  <h2>Abfrage</h2>
+  <div class="optionen">
+    <div class="seg" role="group" aria-label="Richtung">
+      ${[["en-de","Englisch → Deutsch"],["de-en","Deutsch → Englisch"],["mix","Gemischt"]].map(([v,l]) => `<button data-dir="${v}" aria-pressed="${S.dir===v}">${l}</button>`).join("")}
+    </div>
+    <div class="seg" role="group" aria-label="Antwortart">
+      ${[["flip","Aufdecken (10 XP)"],["type","Eintippen (15 XP)"]].map(([v,l]) => `<button data-mode="${v}" aria-pressed="${S.mode===v}">${l}</button>`).join("")}
+    </div>
+  </div>
+
+  <h2>Wordbanks</h2>`;
+  DATA.forEach((topic, ti) => {
+    const banks = BANKS.filter(b => b.ti === ti);
+    const all = banks.every(b => S.sel.includes(b.id));
+    h += `<div class="thema"><div class="thema-kopf"><strong>${esc(topic.t)}</strong>
+      <button class="klein" data-topic="${ti}">${all ? "Keine" : "Alle"}</button></div><div class="chips">`;
+    banks.forEach(b => {
+      const done = b.cards.every(c => boxOf(c) >= 3);
+      h += `<button class="chip" data-bank="${b.id}" aria-pressed="${S.sel.includes(b.id)}">${done ? "📦 " : ""}${esc(b.name)} (${b.cards.length})</button>`;
+    });
+    h += `</div></div>`;
+  });
+
+  const nBadges = BADGES.filter(b => G.badges[b.id]).length;
+  h += `<h2>Abzeichen (${nBadges} von ${BADGES.length})</h2><div class="abz">` +
+    BADGES.map(b => `<div class="badge${G.badges[b.id] ? "" : " zu"}"><div class="i" aria-hidden="true">${b.i}</div><div class="t">${b.t}</div><div class="d">${b.d}</div></div>`).join("") +
+  `</div>
+
+  <h2>Lernstand sichern</h2>
+  <div class="thema">
+    <p style="margin:0 0 10px">Der Lernstand liegt nur auf diesem Gerät. Mit einem Sicherungscode kannst du ihn aufheben (z. B. in Notizen) oder auf ein anderes Gerät übertragen.</p>
+    <div class="optionen"><div class="seg"><button id="bk-make">Code erzeugen</button><button id="bk-load">Code einfügen</button></div></div>
+    <div id="bk-box" hidden>
+      <textarea id="bk-text" class="eingabe" rows="4" style="font-size:.85rem;font-family:ui-monospace,Menlo,monospace" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+      <div class="optionen" style="margin-top:8px"><div class="seg"><button id="bk-copy">Kopieren</button><button id="bk-apply" hidden>Lernstand übernehmen</button></div></div>
+      <p class="hint" id="bk-msg"></p>
+    </div>
+  </div>
+
+  <h2>Einstellungen</h2>
+  <div class="thema">
+    <div class="einst"><span>Tagesziel</span><div class="seg" role="group" aria-label="Tagesziel">
+      ${[[30,"Locker 30"],[50,"Normal 50"],[100,"Profi 100"]].map(([v,l]) => `<button data-goal="${v}" aria-pressed="${G.goal===v}">${l} XP</button>`).join("")}
+    </div></div>
+    <div class="einst"><span>Töne</span><div class="seg" role="group" aria-label="Töne">
+      <button data-sound="1" aria-pressed="${G.sound}">An</button><button data-sound="0" aria-pressed="${!G.sound}">Aus</button>
+    </div></div>
+  </div>
+
+  <h2>Tägliche Erinnerung</h2>
+  <div class="thema">
+    <p style="margin:0 0 10px">Eine Webseite kann leider keine Push-Nachrichten wie Duolingo schicken. Mit einer Erinnerung auf dem iPad klappt es trotzdem.</p>
+    <div class="einst"><span>Uhrzeit</span><input type="time" class="zeitwahl" id="rzeit" value="${esc(G.remind)}"></div>
+    <p style="margin:10px 0 0"><strong>Am schnellsten mit Siri:</strong> „Hey Siri, erinnere mich jeden Tag um <span class="rz">${esc(G.remind)}</span> Uhr an Vokabeln üben.“</p>
+    <details><summary>Oder von Hand in der App „Erinnerungen“</summary><ol>
+      <li>App „Erinnerungen“ öffnen und auf „Neue Erinnerung“ tippen.</li>
+      <li>Titel eingeben: „Vokabeln üben 🔥“.</li>
+      <li>Auf das ⓘ daneben tippen, „Datum“ und „Uhrzeit“ einschalten, <span class="rz">${esc(G.remind)}</span> Uhr wählen.</li>
+      <li>Bei „Wiederholen“ die Option „Täglich“ wählen.</li>
+      <li>Bei „URL“ diesen Link einfügen: <strong>${APP_URL}</strong>. Dann öffnet ein Tipp auf die Erinnerung direkt den Trainer.</li>
+    </ol></details>
+  </div>
+
+  <div class="leiste">
+    <button class="leise" id="liste" ${cards.length ? "" : "disabled"}>Wortliste der Auswahl ansehen</button>
+    <button class="leise" id="reset">${resetArmed ? "Wirklich alles löschen (Karten und Punkte)? Nochmal tippen" : "Fortschritt zurücksetzen"}</button>
+  </div>
+  <p class="hint">Lernstand und Punkte werden nur auf diesem Gerät gespeichert, nichts geht ins Internet. Jeder, der den Link öffnet, hat seinen eigenen Karteikasten. Tipp: Über Teilen → „Zum Home-Bildschirm“ öffnen, dann bleibt der Lernstand zuverlässig erhalten.</p>`;
+  app.innerHTML = h;
+
+  app.querySelectorAll("[data-bank]").forEach(el => el.onclick = () => {
+    const id = el.dataset.bank; S.sel = S.sel.includes(id) ? S.sel.filter(x => x !== id) : [...S.sel, id]; save(); keepScroll(home);
+  });
+  app.querySelectorAll("[data-topic]").forEach(el => el.onclick = () => {
+    const ids = BANKS.filter(b => b.ti === +el.dataset.topic).map(b => b.id);
+    const all = ids.every(id => S.sel.includes(id));
+    S.sel = all ? S.sel.filter(x => !ids.includes(x)) : [...new Set([...S.sel, ...ids])]; save(); keepScroll(home);
+  });
+  app.querySelectorAll("[data-dir]").forEach(el => el.onclick = () => { S.dir = el.dataset.dir; save(); keepScroll(home); });
+  app.querySelectorAll("[data-mode]").forEach(el => el.onclick = () => { S.mode = el.dataset.mode; save(); keepScroll(home); });
+  app.querySelectorAll("[data-goal]").forEach(el => el.onclick = () => { G.goal = +el.dataset.goal; saveGame(); keepScroll(home); });
+  app.querySelectorAll("[data-sound]").forEach(el => el.onclick = () => { G.sound = el.dataset.sound === "1"; saveGame(); if (G.sound) SND.ok(); keepScroll(home); });
+  app.querySelectorAll("[data-box]").forEach(el => el.onclick = () => {
+    const b = +el.dataset.box; start(shuffle(cards.filter(c => boxOf(c) === b)).slice(0, 20), labels[b]);
+  });
+  document.getElementById("go").onclick = () => {
+    const d = cards.filter(isDue);
+    const old = shuffle(d.filter(c => boxOf(c) > 0)).sort((a, b) => boxOf(a) - boxOf(b));
+    const fresh = shuffle(d.filter(c => boxOf(c) === 0));
+    start([...old, ...fresh].slice(0, 20), "Fällige Karten");
+  };
+  document.getElementById("blitz").onclick = blitzStart;
+  document.getElementById("liste").onclick = liste;
+  const bkBox = document.getElementById("bk-box"), bkText = document.getElementById("bk-text"), bkMsg = document.getElementById("bk-msg"), bkApply = document.getElementById("bk-apply"), bkCopy = document.getElementById("bk-copy");
+  document.getElementById("bk-make").onclick = () => {
+    bkBox.hidden = false; bkApply.hidden = true; bkCopy.hidden = false;
+    bkText.value = "VOK1:" + btoa(unescape(encodeURIComponent(JSON.stringify({S, G}))));
+    bkMsg.textContent = "Code kopieren und z. B. in der Notizen-App speichern.";
+  };
+  document.getElementById("bk-load").onclick = () => {
+    bkBox.hidden = false; bkApply.hidden = false; bkCopy.hidden = true; bkText.value = ""; bkText.focus();
+    bkMsg.textContent = "Sicherungscode hier einfügen. Achtung: Der aktuelle Lernstand auf diesem Gerät wird ersetzt.";
+  };
+  bkCopy.onclick = async () => {
+    try { await navigator.clipboard.writeText(bkText.value); bkMsg.textContent = "Kopiert."; }
+    catch(e){ bkText.select(); bkMsg.textContent = "Bitte den markierten Code von Hand kopieren."; }
+  };
+  bkApply.onclick = () => {
+    try {
+      const raw = bkText.value.trim().replace(/^VOK1:/, "");
+      const d = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      if (!d || !d.S || !d.S.p || !d.G) throw 0;
+      S = Object.assign({sel: [], dir: "en-de", mode: "flip"}, d.S); save();
+      G = Object.assign(freshGame(), d.G); G.welcome = 0; saveGame();
+      notice = {gut: true, text: "✅ Lernstand übernommen."}; home(); window.scrollTo(0, 0);
+    } catch(e){ bkMsg.textContent = "Der Code ist ungültig oder unvollständig."; }
+  };
+  const rz = document.getElementById("rzeit");
+  rz.onchange = () => { if (rz.value){ G.remind = rz.value; saveGame(); app.querySelectorAll(".rz").forEach(s => s.textContent = rz.value); } };
+  document.getElementById("reset").onclick = () => {
+    if (!resetArmed){ resetArmed = true; keepScroll(home); return; }
+    resetArmed = false; S.p = {}; save();
+    const keep = {goal: G.goal, sound: G.sound, remind: G.remind};
+    G = Object.assign(freshGame(), keep); saveGame(); home(); window.scrollTo(0, 0);
+  };
+}
+function keepScroll(fn){ const y = window.scrollY; fn(); window.scrollTo(0, y); }
+
+/* ---------- Lernrunde ---------- */
+function start(list, title){
+  if (!list.length) return;
+  resetArmed = false;
+  session = {title, queue: list.map(c => ({c, rep: false})), total: list.length, done: 0, right: 0, wrong: [],
+    combo: 0, maxCombo: 0, xp: 0, events: new Set(), mode: S.mode, lastGain: 0};
+  showCard();
+  window.scrollTo(0, 0);
+}
+
+function sessionBar(extra){
+  const pct = Math.round(100 * session.done / session.total);
+  return `<div class="oben"><button class="klein" id="back">Zurück zum Kasten</button><span class="hint" style="margin:0">${esc(session.title)}${extra || ""}</span></div>
+  <div class="mitte"><span class="kombo">${session.combo >= 3 ? `⚡ ${session.combo}er-Kombo${session.combo >= 5 ? " (+5 Bonus)" : ""}` : ""}</span>
+  <span class="punkte">⭐ ${session.xp} XP${session.lastGain ? `<span class="pop">+${session.lastGain}</span>` : ""}</span></div>
+  <div class="fortschritt"><div style="width:${pct}%"></div></div>`;
+}
+
+function showCard(){
+  if (!session.queue.length) return result();
+  const item = session.queue[0];
+  if (item.dir === undefined) item.dir = item.c.v ? "de-en" : (S.dir === "mix" ? (Math.random() < .5 ? "en-de" : "de-en") : S.dir);
+  const c = item.c, enFirst = item.dir === "en-de";
+  const q = enFirst ? c.en : c.de, a = enFirst ? c.de : c.en;
+  const b = boxOf(c);
+  const long = s => s.length > 34 ? " lang" : "";
+  const tonQ = enFirst ? `<button class="ton" data-say>🔊 Anhören</button>` : "";
+  const tonA = !enFirst ? `<button class="ton" data-say>🔊 Anhören</button>` : "";
+
+  app.innerHTML = sessionBar(item.rep ? ", Wiederholung" : "") + `
+  <div class="szene"><div class="karte" id="karte">
+    <div class="seite vorn">
+      <span class="sprache">${enFirst ? "Englisch" : "Deutsch"}</span><span class="fachinfo">${b ? "Fach " + b : "neu"}</span>
+      <div class="wort${long(q)}">${esc(q)}</div>${c.v && !enFirst ? `<div class="klein-wort">Alle drei Formen</div>` : ""}${tonQ}
+    </div>
+    <div class="seite rueck">
+      <span class="sprache">${enFirst ? "Deutsch" : "Englisch"}</span><span class="fachinfo">${b ? "Fach " + b : "neu"}</span>
+      <div class="wort${long(a)}">${esc(a)}</div>
+      <div class="klein-wort">${esc(q)}</div>${tonA}
+    </div>
+  </div></div>
+  <div id="unten"></div>`;
+  session.lastGain = 0;
+  document.getElementById("back").onclick = home;
+  app.querySelectorAll("[data-say]").forEach(el => el.onclick = e => { e.stopPropagation(); speak(c.en); });
+  const unten = document.getElementById("unten");
+  const karte = document.getElementById("karte");
+
+  if (session.mode === "flip"){
+    unten.innerHTML = `<div class="aktionen eins"><button class="btn haupt" id="flip">Aufdecken</button></div>`;
+    const reveal = () => {
+      karte.classList.add("umgedreht");
+      unten.innerHTML = `<div class="aktionen"><button class="btn nein" id="no">Nicht gewusst</button><button class="btn ja" id="yes">Gewusst</button></div>`;
+      document.getElementById("yes").onclick = () => { SND.ok(); grade(true); };
+      document.getElementById("no").onclick = () => { SND.bad(); grade(false); };
+    };
+    document.getElementById("flip").onclick = reveal;
+    karte.onclick = () => { if (!karte.classList.contains("umgedreht")) reveal(); };
+  } else {
+    unten.innerHTML = `<input class="eingabe" id="inp" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" lang="${enFirst ? "de" : "en"}" placeholder="${enFirst ? "Auf Deutsch …" : (c.v ? "Alle 3 Formen, z. B. go went gone" : "In English …")}">
+      <div class="urteil" id="urteil"></div>
+      <div class="aktionen eins" id="akt"><button class="btn haupt" id="check">Prüfen</button></div>`;
+    const inp = document.getElementById("inp");
+    setTimeout(() => inp.focus(), 50);
+    const check = () => {
+      const ok = isRight(inp.value, a, c.v && !enFirst);
+      karte.classList.add("umgedreht"); inp.disabled = true;
+      if (ok) SND.ok(); else SND.bad();
+      const u = document.getElementById("urteil");
+      u.className = "urteil " + (ok ? "ok" : "bad");
+      u.textContent = ok ? "Richtig!" : (inp.value.trim() ? "Nicht ganz, so heißt es richtig." : "So heißt es richtig.");
+      const akt = document.getElementById("akt");
+      if (ok){
+        akt.className = "aktionen eins"; akt.innerHTML = `<button class="btn haupt" id="next">Weiter</button>`;
+        document.getElementById("next").onclick = () => grade(true);
+      } else {
+        akt.className = "aktionen"; akt.innerHTML = `<button class="btn ja" id="override">Ich hatte recht</button><button class="btn haupt" id="next">Weiter</button>`;
+        document.getElementById("override").onclick = () => grade(true);
+        document.getElementById("next").onclick = () => grade(false);
+      }
+      setTimeout(() => { const n = document.getElementById("next"); if (n) n.focus(); }, 50);
+    };
+    document.getElementById("check").onclick = check;
+    inp.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); if (!inp.disabled) check(); } });
+  }
+}
+
+function grade(ok){
+  const item = session.queue.shift();
+  const c = item.c;
+  let gain = 0;
+  if (!item.rep){
+    session.done++;
+    const b = boxOf(c);
+    const nb = ok ? Math.min(5, Math.max(1, b) + 1) : 1;
+    S.p[c.id] = {b: nb, d: Date.now() + INTERVAL[nb] * DAY - 3600000};
+    save();
+    if (ok){
+      session.right++; session.combo++; session.maxCombo = Math.max(session.maxCombo, session.combo);
+      gain = (session.mode === "type" ? 15 : 10) + (session.combo >= 5 ? 5 : 0);
+    } else { session.wrong.push(c); session.combo = 0; }
+  } else if (ok){ gain = 2; }
+  if (!ok) session.queue.push({c, rep: true});
+  if (gain){ session.xp += gain; addXP(gain).forEach(e => session.events.add(e)); }
+  session.lastGain = gain;
+  showCard();
+}
+
+function rewardsHTML(events, neu){
+  let h = "";
+  if (events.has("goal")) h += `<div class="meldung">🔥 Tagesziel geschafft! Deine Serie: ${G.streak} ${G.streak === 1 ? "Tag" : "Tage"}.</div>`;
+  if (events.has("freeze")) h += `<div class="meldung">❄️ Belohnung: Ein Serien-Schutz. Er rettet deine Serie, wenn du mal einen Tag verpasst.</div>`;
+  if (events.has("level")){ const L = levelOf(G.xp); h += `<div class="meldung">🎉 Level ${L.i + 1} erreicht: ${L.name}!</div>`; }
+  if (neu.length) h += `<h2>Neue Abzeichen</h2><div class="abz">` + neu.map(b => `<div class="badge neu"><div class="i">${b.i}</div><div class="t">${b.t}</div><div class="d">${b.d}</div></div>`).join("") + `</div>`;
+  return h;
+}
+
+function result(){
+  const n = session.total, r = session.right, perfect = session.wrong.length === 0;
+  if (perfect && n >= 5){ session.xp += 20; addXP(20).forEach(e => session.events.add(e)); }
+  G.rounds++; saveGame();
+  const neu = checkBadges({perfect, total: n, right: r, maxCombo: session.maxCombo, mode: session.mode});
+  const big = session.events.size > 0 || neu.length > 0 || (perfect && n >= 5);
+  let h = `<div class="ergebnis">
+    <div class="gross">${r} von ${n}</div>
+    <div class="xpgross">+${session.xp} XP${perfect && n >= 5 ? " (inkl. 20 Bonus für fehlerfrei)" : ""}</div>
+    <p>${perfect ? "Alles gewusst. Die Karten sind ein Fach weitergerückt." : "Die falschen Karten liegen wieder in Fach 1 und kommen morgen erneut dran."}${session.maxCombo >= 3 ? ` Beste Kombo: ${session.maxCombo}.` : ""}</p>
+    ${rewardsHTML(session.events, neu)}`;
+  if (session.wrong.length){
+    h += `<h2>Diese Wörter üben</h2><div class="tabelle-wrap"><table><tbody>` +
+      session.wrong.map(c => `<tr><td>${esc(c.en)}</td><td>${esc(c.de)}</td></tr>`).join("") + `</tbody></table></div>`;
+  }
+  h += `<button class="start" id="home">Zurück zum Kasten</button></div>`;
+  app.innerHTML = h;
+  document.getElementById("home").onclick = () => { home(); window.scrollTo(0, 0); };
+  window.scrollTo(0, 0);
+  if (big){ SND.win(); confetti(); }
+}
+
+/* ---------- Blitzrunde ---------- */
+function blitzStart(){
+  const pool = selectedCards(); if (pool.length < 4) return;
+  resetArmed = false;
+  session = {blitz: true, pool, score: 0, tries: 0, combo: 0, maxCombo: 0, xp: 0, events: new Set(), end: Date.now() + 60000, lock: false, lastGain: 0};
+  blitzNext();
+  blitzTimer = setInterval(blitzTick, 200);
+  window.scrollTo(0, 0);
+}
+function blitzTick(){
+  if (!session || !session.blitz){ clearInterval(blitzTimer); blitzTimer = null; return; }
+  const left = Math.max(0, session.end - Date.now());
+  const z = document.getElementById("zeit");
+  if (z){ z.firstElementChild.style.width = (100 * left / 60000) + "%"; z.classList.toggle("knapp", left < 10000); }
+  const s = document.getElementById("sek"); if (s) s.textContent = Math.ceil(left / 1000) + " s";
+  if (left <= 0) blitzEnd();
+}
+function blitzNext(){
+  const B = session;
+  const c = B.pool[Math.floor(Math.random() * B.pool.length)];
+  const dir = c.v ? "de-en" : (S.dir === "mix" ? (Math.random() < .5 ? "en-de" : "de-en") : S.dir);
+  const enFirst = dir === "en-de";
+  const ans = x => enFirst ? x.de : x.en;
+  const right = ans(c), opts = [right];
+  const sources = [shuffle(B.pool.filter(x => x.bank === c.bank)), shuffle(B.pool.slice()), shuffle(CARDS.slice(0, 400))];
+  for (const src of sources){
+    for (const x of src){ if (opts.length >= 4) break; const v = ans(x); if (!opts.some(o => norm(o) === norm(v))) opts.push(v); }
+    if (opts.length >= 4) break;
+  }
+  shuffle(opts);
+  const left = Math.max(0, B.end - Date.now());
+  app.innerHTML = `<div class="oben"><button class="klein" id="back">Abbrechen</button><span class="hint" style="margin:0" id="sek">${Math.ceil(left / 1000)} s</span></div>
+    <div class="mitte"><span class="kombo">${B.combo >= 3 ? `⚡ ${B.combo}er-Kombo` : ""}</span><span class="punkte">🎯 ${B.score} Treffer, ⭐ ${B.xp} XP${B.lastGain ? `<span class="pop">+${B.lastGain}</span>` : ""}</span></div>
+    <div class="zeit${left < 10000 ? " knapp" : ""}" id="zeit"><div style="width:${100 * left / 60000}%"></div></div>
+    <div class="blitzkarte"><span class="sprache">${enFirst ? "Englisch" : "Deutsch"}</span><div class="wort${(enFirst ? c.en : c.de).length > 34 ? " lang" : ""}">${esc(enFirst ? c.en : c.de)}</div></div>
+    <div class="mc">${opts.map((o, i) => `<button data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
+  B.lastGain = 0; B.lock = false;
+  document.getElementById("back").onclick = home;
+  app.querySelectorAll(".mc button").forEach(btn => btn.onclick = () => {
+    if (B.lock || session !== B) return; B.lock = true;
+    const ok = opts[+btn.dataset.i] === right;
+    B.tries++;
+    if (ok){
+      B.score++; B.combo++; B.maxCombo = Math.max(B.maxCombo, B.combo);
+      const g = 5 + (B.combo >= 5 ? 3 : 0); B.xp += g; B.lastGain = g; addXP(g).forEach(e => B.events.add(e));
+      btn.classList.add("richtig"); SND.ok();
+    } else {
+      B.combo = 0; btn.classList.add("falsch"); SND.bad();
+      app.querySelectorAll(".mc button").forEach(x => { if (opts[+x.dataset.i] === right) x.classList.add("richtig"); });
+    }
+    setTimeout(() => { if (session === B && Date.now() < B.end) blitzNext(); }, ok ? 350 : 1100);
+  });
+}
+function blitzEnd(){
+  clearInterval(blitzTimer); blitzTimer = null;
+  const B = session; if (!B || !B.blitz) return;
+  session = null;
+  const rekord = B.score > G.blitzBest;
+  if (rekord){ G.blitzBest = B.score; }
+  G.rounds++; saveGame();
+  const neu = checkBadges({blitz: B.score, maxCombo: B.maxCombo});
+  app.innerHTML = `<div class="ergebnis">
+    <div class="gross">${B.score} Treffer</div>
+    <div class="xpgross">+${B.xp} XP</div>
+    <p>${rekord ? "🏅 Neuer Rekord!" : `Rekord: ${G.blitzBest} Treffer.`} ${B.tries ? `Trefferquote ${Math.round(100 * B.score / B.tries)} %.` : ""} Die Blitzrunde ändert deinen Karteikasten nicht, sie ist zum Aufwärmen und Punkte sammeln.</p>
+    ${rewardsHTML(B.events, neu)}
+    <button class="start" id="again">Nochmal</button>
+    <button class="zweit" id="home">Zurück zum Kasten</button></div>`;
+  document.getElementById("again").onclick = blitzStart;
+  document.getElementById("home").onclick = () => { home(); window.scrollTo(0, 0); };
+  window.scrollTo(0, 0);
+  if (rekord || B.events.size || neu.length){ SND.win(); confetti(); }
+}
+
+/* ---------- Wortliste ---------- */
+function liste(){
+  let h = `<div class="oben"><button class="klein" id="back">Zurück zum Kasten</button></div><h1>Wortliste</h1>
+  <div class="tabelle-wrap"><table><thead><tr><th>Englisch</th><th>Deutsch</th><th>Fach</th></tr></thead><tbody>`;
+  BANKS.filter(b => S.sel.includes(b.id)).forEach(b => {
+    h += `<tr class="bankkopf"><td colspan="3">${esc(b.topic)} – ${esc(b.name)}</td></tr>`;
+    b.cards.forEach(c => { const x = boxOf(c); h += `<tr><td>${esc(c.en)}</td><td>${esc(c.de)}</td><td class="f">${x ? x : "neu"}</td></tr>`; });
+  });
+  h += `</tbody></table></div>`;
+  app.innerHTML = h;
+  document.getElementById("back").onclick = home;
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !session) keepScroll(home); });
+home();
+</script>
+</body>
+</html>
